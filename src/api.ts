@@ -47,6 +47,12 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T
 }
 
+export interface TrackedItem {
+  name: string
+  zh: string
+  category: string
+}
+
 const enc = encodeURIComponent
 
 export const api = {
@@ -57,4 +63,9 @@ export const api = {
   update: (table: string, id: unknown, row: Row) =>
     request<Row>('PATCH', `/${enc(table)}/${enc(String(id))}`, row),
   remove: (table: string, id: unknown) => request<Row>('DELETE', `/${enc(table)}/${enc(String(id))}`),
+  tracked: () => request<TrackedItem[]>('GET', '/tracked'),
+  addTracked: (item: TrackedItem) => request<TrackedItem & { synced: boolean }>('POST', '/tracked', item),
+  updateTracked: (name: string, item: Pick<TrackedItem, 'zh' | 'category'>) =>
+    request<TrackedItem>('PATCH', `/tracked/${enc(name)}`, item),
+  removeTracked: (name: string) => request<{ name: string }>('DELETE', `/tracked/${enc(name)}`),
 }

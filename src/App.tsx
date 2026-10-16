@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Alert, Button, Input, Layout, Menu, Space, Spin, Typography } from 'antd'
 import { api, getToken, setToken, type TableMeta } from './api'
 import TablePage from './TablePage'
+import TrackedPage from './TrackedPage'
 
 const TABLE_LABELS: Record<string, string> = {
   items: '暗金裝備',
@@ -27,6 +28,9 @@ const TABLE_LABELS: Record<string, string> = {
   announcements: '公告',
   trades: '交易',
 }
+
+// 不是 d2r-service 的資料表，是 d2r-traderie 的價格追蹤清單
+const TRACKED_KEY = '__tracked'
 
 export default function App() {
   const [tables, setTables] = useState<TableMeta[]>([])
@@ -88,10 +92,13 @@ export default function App() {
             mode="inline"
             selectedKeys={current ? [current] : []}
             onClick={(e) => setCurrent(e.key)}
-            items={tables.map((t) => ({
-              key: t.table,
-              label: TABLE_LABELS[t.table] ? `${TABLE_LABELS[t.table]}（${t.table}）` : t.table,
-            }))}
+            items={[
+              ...tables.map((t) => ({
+                key: t.table,
+                label: TABLE_LABELS[t.table] ? `${TABLE_LABELS[t.table]}（${t.table}）` : t.table,
+              })),
+              ...(tables.length ? [{ key: TRACKED_KEY, label: 'TR 價格追蹤物品' }] : []),
+            ]}
             style={{ height: '100%', borderInlineEnd: 0 }}
           />
         </Layout.Sider>
@@ -100,6 +107,7 @@ export default function App() {
             <Alert type="error" showIcon title={error} style={{ marginBottom: 16 }} />
           )}
           {loading && <Spin />}
+          {current === TRACKED_KEY && <TrackedPage />}
           {meta && <TablePage key={meta.table} meta={meta} title={TABLE_LABELS[meta.table]} />}
         </Layout.Content>
       </Layout>
