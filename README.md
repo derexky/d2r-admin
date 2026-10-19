@@ -25,4 +25,5 @@ npm run dev
 
 - 欄位與型別來自 `GET /api/admin/tables`（依 d2r-service 的 TypeORM entity 自動產生），新增 entity 後後台會自動出現該表。
 - 「TR 價格追蹤物品」頁不是資料表，經 d2r-service 轉發到 d2r-traderie（需設 `TRADERIE_URL`／`TRADERIE_TOKEN`），改了立即生效，不用 commit 或部署。
+- 「TR 低價通知」「TR 物品價值」頁同樣經 d2r-service 轉發到 d2r-traderie，改了立即生效。
 - JSON 字串欄位（如 `stats`）編輯時會展開排版，存檔時壓回單行並檢查格式。

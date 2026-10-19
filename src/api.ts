@@ -53,6 +53,23 @@ export interface TrackedItem {
   category: string
 }
 
+export type PropRule = number | boolean | string
+
+export interface PriceAlert {
+  id: number
+  item: string
+  ladder: boolean
+  mode: 'sc' | 'hc'
+  max_value: number
+  // traderie 屬性名稱 → 數字為下限，布林／字串須相等
+  props: Record<string, PropRule>
+}
+
+export interface PriceValue {
+  name: string
+  value: number
+}
+
 const enc = encodeURIComponent
 
 export const api = {
@@ -68,4 +85,12 @@ export const api = {
   updateTracked: (name: string, item: Pick<TrackedItem, 'zh' | 'category'>) =>
     request<TrackedItem>('PATCH', `/tracked/${enc(name)}`, item),
   removeTracked: (name: string) => request<{ name: string }>('DELETE', `/tracked/${enc(name)}`),
+  alerts: () => request<PriceAlert[]>('GET', '/alerts'),
+  addAlert: (a: Omit<PriceAlert, 'id'>) => request<PriceAlert>('POST', '/alerts', a),
+  updateAlert: (id: number, a: Omit<PriceAlert, 'id'>) => request<PriceAlert>('PATCH', `/alerts/${id}`, a),
+  removeAlert: (id: number) => request<{ id: number }>('DELETE', `/alerts/${id}`),
+  checkAlerts: () => request<{ message: string }>('POST', '/alerts/check'),
+  values: () => request<PriceValue[]>('GET', '/values'),
+  setValue: (v: PriceValue) => request<PriceValue>('PUT', `/values/${enc(v.name)}`, { value: v.value }),
+  removeValue: (name: string) => request<{ name: string }>('DELETE', `/values/${enc(name)}`),
 }
