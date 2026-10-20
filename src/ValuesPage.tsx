@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Form, Input, InputNumber, Popconfirm, Space, Table, Typography } from 'antd'
+import { App, Button, Form, Input, InputNumber, Popconfirm, Segmented, Space, Table, Typography } from 'antd'
 import { api, type PriceValue } from './api'
 
-// d2r-traderie 換算掛單價格用的價值表；改動直接寫進 traderie，下一輪檢查就生效
+const COMBOS = [
+  { value: 'ladder_sc', label: 'Ladder SC' },
+  { value: 'nonladder_sc', label: 'NL SC' },
+  { value: 'ladder_hc', label: 'Ladder HC' },
+  { value: 'nonladder_hc', label: 'NL HC' },
+]
+
+// d2r-traderie 換算掛單價格用的價值表，每種模式各一張；改動直接寫進 traderie，下一輪檢查就生效
 export default function ValuesPage() {
   const { message } = App.useApp()
-  const [form] = Form.useForm<PriceValue>()
+  const [form] = Form.useForm<Omit<PriceValue, 'combo'>>()
+  const [combo, setCombo] = useState(COMBOS[0].value)
   const [rows, setRows] = useState<PriceValue[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -25,10 +33,10 @@ export default function ValuesPage() {
     load()
   }, [load])
 
-  const submit = async (v: PriceValue) => {
+  const submit = async (v: Omit<PriceValue, 'combo'>) => {
     setSaving(true)
     try {
-      await api.setValue({ name: v.name.trim(), value: v.value })
+      await api.setValue({ combo, name: v.name.trim(), value: v.value })
       message.success('已儲存')
       form.resetFields()
       load()
@@ -41,7 +49,7 @@ export default function ValuesPage() {
 
   const remove = async (name: string) => {
     try {
-      await api.removeValue(name)
+      await api.removeValue(combo, name)
       message.success('已移除')
       load()
     } catch (e) {
@@ -56,8 +64,17 @@ export default function ValuesPage() {
       </Typography.Title>
       <Typography.Paragraph type="secondary">
         低價通知用這張表換算掛單價格：一組價格 = Σ 價值 × 數量，多組擇一取最便宜。名稱要跟 traderie 一樣（如 Ber
-        Rune）；不在表內的物品無法換算，該組價格會被略過。單位自訂，與通知的目標價一致即可。
+        Rune）；不在表內的物品無法換算，該組價格會被略過。每種模式各一張表，通知用自己模式的那張；單位自訂，與該模式通知的目標價一致即可。
       </Typography.Paragraph>
+      <Segmented
+        options={COMBOS}
+        value={combo}
+        onChange={(c) => {
+          setCombo(c)
+          form.resetFields()
+        }}
+        style={{ marginBottom: 16 }}
+      />
       <Form form={form} layout="inline" onFinish={submit} style={{ marginBottom: 16, rowGap: 8 }}>
         <Form.Item name="name" rules={[{ required: true, whitespace: true, message: '請輸入名稱' }]}>
           <Input placeholder="traderie 名稱，如 Ber Rune" style={{ width: 220 }} />
@@ -73,7 +90,7 @@ export default function ValuesPage() {
         rowKey="name"
         size="small"
         loading={loading}
-        dataSource={rows}
+        dataSource={rows.filter((r) => r.combo === combo)}
         pagination={false}
         columns={[
           { title: '名稱', dataIndex: 'name' },

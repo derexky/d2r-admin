@@ -97,7 +97,7 @@ export default function AlertsPage() {
       </Typography.Title>
       <Typography.Paragraph type="secondary">
         每 10 分鐘檢查 traderie 掛賣中列表，符合屬性門檻且價格 ≤ 目標價就推 LINE，同一張單只通知一次。目標價的單位同「TR
-        物品價值」表。屬性名稱要跟 traderie 一樣（如 <code>{'+{{value}}% Enhanced Defense'}</code>
+        物品價值」裡同模式的那張表。屬性名稱要跟 traderie 一樣（如 <code>{'+{{value}}% Enhanced Defense'}</code>
         ）；門檻填數字為下限，true／false 或文字須相等。
       </Typography.Paragraph>
       <Form

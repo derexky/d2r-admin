@@ -66,6 +66,7 @@ export interface PriceAlert {
 }
 
 export interface PriceValue {
+  combo: string
   name: string
   value: number
 }
@@ -91,6 +92,7 @@ export const api = {
   removeAlert: (id: number) => request<{ id: number }>('DELETE', `/alerts/${id}`),
   checkAlerts: () => request<{ message: string }>('POST', '/alerts/check'),
   values: () => request<PriceValue[]>('GET', '/values'),
-  setValue: (v: PriceValue) => request<PriceValue>('PUT', `/values/${enc(v.name)}`, { value: v.value }),
-  removeValue: (name: string) => request<{ name: string }>('DELETE', `/values/${enc(name)}`),
+  setValue: (v: PriceValue) => request<PriceValue>('PUT', `/values/${enc(v.combo)}/${enc(v.name)}`, { value: v.value }),
+  removeValue: (combo: string, name: string) =>
+    request<{ combo: string; name: string }>('DELETE', `/values/${enc(combo)}/${enc(name)}`),
 }
