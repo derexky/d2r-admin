@@ -33,7 +33,7 @@ d2r-admin.derexky.com ─ Cloudflare Access
       └ d2r-admin 容器（nginx：靜態檔，/api → d2r-service:3001）
           └ d2r-service 容器（docker 網路 d2r，不對外）
               ├ DB：/share/CACHEDEV1_DATA/homes/derexky/d2r-service-data/d2r.sqlite
-              └ TR 頁面 → host.docker.internal:7432（d2r-traderie）
+              └ TR 頁面 → https://traderie.derexky.com（d2r-traderie）
 ```
 
 - 原始碼：`/share/homes/derexky/d2r-admin`、`/share/homes/derexky/d2r-service`（不是 git repo，`.deployed-commit` 記錄已部署的 commit）
