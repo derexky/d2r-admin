@@ -53,16 +53,41 @@ export interface TrackedItem {
   category: string
 }
 
-export type PropRule = number | boolean | string
+// 一個屬性條件；id／name／type 取自 GET /alerts/props。數字用 id 篩、文字和布林用名稱篩
+export type Condition =
+  | { id: number; name: string; type: 'number'; min?: number; max?: number }
+  | { id: number; name: string; type: 'string'; values: string[] }
+  | { id: number; name: string; type: 'bool'; value: boolean }
 
 export interface PriceAlert {
   id: number
   item: string
+  // traderie 物品 id，由後端依名稱查出
+  item_id: number
   ladder: boolean
   mode: 'sc' | 'hc'
   max_value: number
-  // traderie 屬性名稱 → 數字為下限，布林／字串須相等
-  props: Record<string, PropRule>
+  conditions: Condition[]
+}
+
+export type NewAlert = Omit<PriceAlert, 'id' | 'item_id'>
+
+// traderie 可篩選的屬性，附上賣家實際填寫的統計（沒人填過就沒有 stat）
+export interface PropDef {
+  id: number
+  name: string
+  type: 'number' | 'string' | 'bool'
+  options?: string[]
+  stat?: { rate: number; min?: number; median?: number; max?: number; values?: string[] }
+}
+
+export interface PropsLookup {
+  item: string
+  item_id: number
+  // completed：追蹤物品的成交紀錄；selling：即時抓的最新一頁掛賣單
+  source: 'completed' | 'selling'
+  listings: number
+  props: PropDef[]
 }
 
 export interface PriceValue {
@@ -87,9 +112,10 @@ export const api = {
     request<TrackedItem>('PATCH', `/tracked/${enc(name)}`, item),
   removeTracked: (name: string) => request<{ name: string }>('DELETE', `/tracked/${enc(name)}`),
   alerts: () => request<PriceAlert[]>('GET', '/alerts'),
-  addAlert: (a: Omit<PriceAlert, 'id'>) => request<PriceAlert>('POST', '/alerts', a),
-  updateAlert: (id: number, a: Omit<PriceAlert, 'id'>) => request<PriceAlert>('PATCH', `/alerts/${id}`, a),
+  addAlert: (a: NewAlert) => request<PriceAlert>('POST', '/alerts', a),
+  updateAlert: (id: number, a: NewAlert) => request<PriceAlert>('PATCH', `/alerts/${id}`, a),
   removeAlert: (id: number) => request<{ id: number }>('DELETE', `/alerts/${id}`),
+  alertProps: (item: string) => request<PropsLookup>('GET', `/alerts/props?${new URLSearchParams({ item })}`),
   checkAlerts: () => request<{ message: string }>('POST', '/alerts/check'),
   values: () => request<PriceValue[]>('GET', '/values'),
   setValue: (v: PriceValue) => request<PriceValue>('PUT', `/values/${enc(v.combo)}/${enc(v.name)}`, { value: v.value }),
