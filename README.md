@@ -21,9 +21,7 @@ npm run dev
 
 ## 上線流程
 
-正式環境的 DB 是部署時打包的 `d2r.sqlite` 唯讀副本，所以在後台改完後要 commit `d2r-service/d2r.sqlite` 並重新部署才會生效。
-
-用 myhost 的後台改的是 NAS 上那份 DB，要先拉回 repo 再 commit（見 d2r-service README 的「myhost」）。**同一段時間只在一邊改**：本機和 NAS 各改各的，拉回或推上時會互相覆蓋。
+遊戲資料的正本在 GCS（`gs://d2r-diablo-db/d2r.sqlite`）。myhost 的後台改完會直接寫回 GCS，正式站最多一分鐘後換上新版，不用 commit 或部署（見 d2r-service README 的「遊戲資料 DB：正本在 GCS」）。本機後台改的是本機 `d2r.sqlite`，不會影響正式站。
 
 ## myhost
 
@@ -32,7 +30,7 @@ d2r-admin.derexky.com ─ Cloudflare Access
   └ cloudflared（host 網路）→ 127.0.0.1:5174
       └ d2r-admin 容器（nginx：靜態檔，/api → d2r-service:3001）
           └ d2r-service 容器（docker 網路 d2r，不對外）
-              ├ DB：/share/CACHEDEV1_DATA/homes/derexky/d2r-service-data/d2r.sqlite
+              ├ DB：正本在 gs://d2r-diablo-db/d2r.sqlite（data volume 只放 GCS 金鑰）
               └ TR 頁面 → https://traderie.derexky.com（d2r-traderie）
 ```
 
