@@ -1,6 +1,8 @@
 # d2r-admin
 
-d2r-service 的本機資料後台，可新增、修改、刪除 `d2r.sqlite` 所有資料表。
+d2r-service 的資料後台，可新增、修改、刪除 `d2r.sqlite` 所有資料表。
+
+線上版在 myhost：`https://d2r-admin.derexky.com`（Cloudflare Access 只允許指定 email 登入，進去後右上角再輸入 `ADMIN_TOKEN`）。架構、部署與 DB 流程見下方「myhost」。下面的本機啟動方式仍可用於開發。
 
 ## 啟動
 
@@ -20,6 +22,27 @@ npm run dev
 ## 上線流程
 
 正式環境的 DB 是部署時打包的 `d2r.sqlite` 唯讀副本，所以在後台改完後要 commit `d2r-service/d2r.sqlite` 並重新部署才會生效。
+
+用 myhost 的後台改的是 NAS 上那份 DB，要先拉回 repo 再 commit（見 d2r-service README 的「myhost」）。**同一段時間只在一邊改**：本機和 NAS 各改各的，拉回或推上時會互相覆蓋。
+
+## myhost
+
+```
+d2r-admin.derexky.com ─ Cloudflare Access
+  └ cloudflared（host 網路）→ 127.0.0.1:5174
+      └ d2r-admin 容器（nginx：靜態檔，/api → d2r-service:3001）
+          └ d2r-service 容器（docker 網路 d2r，不對外）
+              ├ DB：/share/CACHEDEV1_DATA/homes/derexky/d2r-service-data/d2r.sqlite
+              └ TR 頁面 → host.docker.internal:7432（d2r-traderie）
+```
+
+- 原始碼：`/share/homes/derexky/d2r-admin`、`/share/homes/derexky/d2r-service`（不是 git repo，`.deployed-commit` 記錄已部署的 commit）
+- 映像檔在 NAS 上建置：`DOCKER_BUILDKIT=0 docker build -t d2r-admin:latest /share/homes/derexky/d2r-admin`（d2r-service 同理）
+- 容器：
+  ```bash
+  docker run -d --name d2r-admin --network d2r --restart always -p 127.0.0.1:5174:80 d2r-admin:latest
+  ```
+  nginx 每次請求重新解析 `d2r-service`，所以重建 d2r-service 不用重啟 admin。
 
 ## 備註
 
