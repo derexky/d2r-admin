@@ -68,6 +68,8 @@ export interface PriceAlert {
   mode: 'sc' | 'hc'
   max_value: number
   conditions: Condition[]
+  // LINE id、tg:<chat id> 或 Discord Webhook URL，可混用；空的就推給預設的 LINE_ALERT_TO
+  recipients: string[]
 }
 
 export type NewAlert = Omit<PriceAlert, 'id' | 'item_id'>

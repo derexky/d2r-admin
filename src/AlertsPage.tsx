@@ -16,6 +16,7 @@ interface FormValues {
   combo: string
   max_value: number
   conditions?: ConditionRow[]
+  recipients?: string[]
 }
 
 type Def = Pick<PropDef, 'id' | 'name' | 'type'> & Partial<PropDef>
@@ -64,6 +65,9 @@ function describe(c: Condition): string {
   }
   return c.type === 'string' ? `${c.name} ∈ ${c.values.join('、')}` : `${c.name} = ${c.value ? '是' : '否'}`
 }
+
+// Discord Webhook URL 本身就是密鑰，列表只顯示 webhook id
+const recipientText = (to: string) => (to.startsWith('https://') ? `Discord ${to.split('/')[5]}` : to)
 
 const statText = (d: Def) => {
   if (!d.stat) return '沒人填過'
@@ -141,6 +145,7 @@ export default function AlertsPage() {
       item: r.item,
       combo: `${r.ladder ? 'ladder' : 'nonladder'}_${r.mode}`,
       max_value: r.max_value,
+      recipients: r.recipients,
       conditions: r.conditions.map((c) =>
         c.type === 'number'
           ? { id: c.id, min: c.min, max: c.max }
@@ -158,6 +163,7 @@ export default function AlertsPage() {
       ...parseCombo(v.combo),
       max_value: v.max_value,
       conditions: rowsToConditions(v.conditions),
+      recipients: v.recipients ?? [],
     }
     setSaving(true)
     try {
@@ -258,6 +264,13 @@ export default function AlertsPage() {
             <InputNumber min={0} step={0.01} style={{ width: 120 }} />
           </Form.Item>
         </Space>
+        <Form.Item
+          name="recipients"
+          label="收件人"
+          extra="可多個，輸入後按 Enter：LINE ID（U／C／R 開頭）、tg:<chat id>、Discord Webhook URL。留空推給預設的 LINE 收件人"
+        >
+          <Select mode="tags" open={false} tokenSeparators={[' ', ',']} placeholder="預設 LINE 收件人" />
+        </Form.Item>
         {lookup && (
           <Typography.Paragraph type="secondary" style={{ marginTop: -8 }}>
             已載入 {lookup.item} 的 {lookup.props.length} 個屬性（統計來自{lookup.source === 'completed' ? '成交紀錄' : '最新掛賣單'}{' '}
@@ -372,6 +385,7 @@ export default function AlertsPage() {
           { title: '模式', key: 'combo', width: 110, render: (_, r) => comboLabel(r) },
           { title: '目標價 ≤', dataIndex: 'max_value', width: 100 },
           { title: '屬性條件', key: 'conditions', render: (_, r) => r.conditions.map(describe).join('；') },
+          { title: '收件人', key: 'recipients', render: (_, r) => (r.recipients.length ? r.recipients.map(recipientText).join('、') : '預設') },
           {
             title: '操作',
             key: '_actions',
