@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Form, Input, InputNumber, Popconfirm, Select, Space, Table, Typography } from 'antd'
-import { api, type Condition, type NewAlert, type PriceAlert, type PropDef, type PropsLookup } from './api'
+import { App, AutoComplete, Button, Form, Input, InputNumber, Popconfirm, Select, Space, Table, Typography } from 'antd'
+import { api, type Condition, type NewAlert, type PriceAlert, type PropDef, type PropsLookup, type TrackedItem } from './api'
 
 // 表單裡的一列條件；依所選屬性的類型只用到其中幾個欄位
 interface ConditionRow {
@@ -81,6 +81,8 @@ export default function AlertsPage() {
   const [saving, setSaving] = useState(false)
   const [lookup, setLookup] = useState<PropsLookup>()
   const [lookingUp, setLookingUp] = useState(false)
+  const [tracked, setTracked] = useState<TrackedItem[]>([])
+  const [category, setCategory] = useState<string>()
   const watched = Form.useWatch([], form)
 
   const load = useCallback(async () => {
@@ -97,6 +99,11 @@ export default function AlertsPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  // 下拉選單只是方便挑，沒追蹤的物品照樣可以直接打英文名稱
+  useEffect(() => {
+    api.tracked().then(setTracked, (e) => message.error((e as Error).message))
+  }, [message])
 
   // 屬性清單還沒載入時（例如剛按編輯），先用通知裡存的條件撐著
   const defOf = (id?: number): Def | undefined =>
@@ -186,6 +193,10 @@ export default function AlertsPage() {
     }
   }
 
+  const categories = [...new Set(tracked.map((t) => t.category))]
+  const itemOptions = tracked
+    .filter((t) => !category || t.category === category)
+    .map((t) => ({ value: t.name, label: `${t.zh}（${t.name}）` }))
   const propOptions = (lookup?.props ?? []).map((p) => ({ value: p.id, label: `${p.name}（${statText(p)}）` }))
   const preview = queryPreview(lookup?.item_id ?? editing?.item_id, watched?.combo ?? 'ladder_sc', rowsToConditions(watched?.conditions))
 
@@ -196,7 +207,7 @@ export default function AlertsPage() {
       </Typography.Title>
       <Typography.Paragraph type="secondary">
         每 10 分鐘用下面的條件向 traderie 查掛賣中列表（由 traderie 篩選），價格 ≤ 目標價就推 LINE，同一張單只通知一次。目標價的單位同「TR
-        物品價值」裡同模式的那張表。輸入物品後按「查屬性」載入它能篩選的屬性，再新增條件。
+        物品價值」裡同模式的那張表。從下拉選單選物品（可先選分類）會自動載入它能篩選的屬性，手打的名稱再按「查屬性」，再新增條件。
       </Typography.Paragraph>
       <Form
         form={form}
@@ -206,22 +217,34 @@ export default function AlertsPage() {
         style={{ marginBottom: 16, maxWidth: 900 }}
       >
         <Space wrap align="start">
+          <Form.Item label="分類">
+            <Select
+              allowClear
+              placeholder="全部"
+              style={{ width: 120 }}
+              value={category}
+              onChange={setCategory}
+              options={categories.map((c) => ({ value: c, label: c }))}
+            />
+          </Form.Item>
           <Form.Item name="item" label="物品" rules={[{ required: true, whitespace: true, message: '請輸入英文名稱' }]}>
-            <Input
-              placeholder="英文名稱（traderie）"
-              style={{ width: 220 }}
-              onPressEnter={(e) => {
-                e.preventDefault()
-                lookupProps()
-              }}
-              onChange={(e) => {
+            <AutoComplete
+              options={itemOptions}
+              style={{ width: 280 }}
+              filterOption={(input, o) => o!.label.toLowerCase().includes(input.trim().toLowerCase())}
+              // 選了追蹤物品就直接查屬性；手打的名稱再按「查屬性」
+              onSelect={(v: string) => lookupProps(v)}
+              onChange={(v: string = '') => {
                 // 條件綁的是物品的屬性，換物品就要重選
-                if (lookup && e.target.value.trim().toLowerCase() !== lookup.item.toLowerCase()) {
+                if (lookup && v.trim().toLowerCase() !== lookup.item.toLowerCase()) {
                   setLookup(undefined)
                   form.setFieldValue('conditions', [])
                 }
               }}
-            />
+            >
+              {/* Enter 可能是在選選項，不拿來查屬性，只擋掉送出表單 */}
+              <Input placeholder="中文或英文名稱" onPressEnter={(e) => e.preventDefault()} />
+            </AutoComplete>
           </Form.Item>
           <Form.Item label=" ">
             <Button onClick={() => lookupProps()} loading={lookingUp}>
