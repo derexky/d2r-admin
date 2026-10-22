@@ -81,7 +81,7 @@ const statText = (d: Def) => {
   return d.stat.median !== undefined ? `${rate}，常見 ${d.stat.min}／${d.stat.median}／${d.stat.max}` : rate
 }
 
-// d2r-traderie 每 10 分鐘用這些條件向 traderie 查掛賣單，價格 ≤ 目標價就推 LINE
+// d2r-traderie 每 5 分鐘用這些條件向 traderie 查掛賣單，價格 ≤ 目標價就推 LINE
 export default function AlertsPage() {
   const { message } = App.useApp()
   const [form] = Form.useForm<FormValues>()
@@ -224,7 +224,7 @@ export default function AlertsPage() {
         TR 低價通知
       </Typography.Title>
       <Typography.Paragraph type="secondary">
-        每 10 分鐘用下面的條件向 traderie 查掛賣中列表（由 traderie 篩選），價格 ≤ 目標價就推 LINE，同一張單只通知一次。目標價的單位同「TR
+        每 5 分鐘用下面的條件向 traderie 查掛賣中列表（由 traderie 篩選），價格 ≤ 目標價就推 LINE，同一張單只通知一次。目標價的單位同「TR
         物品價值」裡同模式的那張表。從下拉選單選物品（可先選分類）會自動載入它能篩選的屬性，手打的名稱再按「查屬性」，再新增條件。
       </Typography.Paragraph>
       <Form
