@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { App, AutoComplete, Button, Form, Input, InputNumber, Popconfirm, Select, Space, Table, Typography } from 'antd'
-import { api, type Condition, type NewAlert, type PriceAlert, type PropDef, type PropsLookup, type TrackedItem } from './api'
+import { api, type Condition, type NewAlert, type LineContact, type PriceAlert, type PropDef, type PropsLookup, type TrackedItem } from './api'
 
 // 表單裡的一列條件；依所選屬性的類型只用到其中幾個欄位
 interface ConditionRow {
@@ -66,8 +66,12 @@ function describe(c: Condition): string {
   return c.type === 'string' ? `${c.name} ∈ ${c.values.join('、')}` : `${c.name} = ${c.value ? '是' : '否'}`
 }
 
-// Discord Webhook URL 本身就是密鑰，列表只顯示 webhook id
-const recipientText = (to: string) => (to.startsWith('https://') ? `Discord ${to.split('/')[5]}` : to)
+// Discord Webhook URL 本身就是密鑰，列表只顯示 webhook id；記錄過的 LINE id 顯示名稱
+const recipientText = (to: string, contacts: LineContact[]) => {
+  if (to.startsWith('https://')) return `Discord ${to.split('/')[5]}`
+  const c = contacts.find((x) => x.id === to)
+  return c?.name ?? to
+}
 
 const statText = (d: Def) => {
   if (!d.stat) return '沒人填過'
@@ -87,6 +91,7 @@ export default function AlertsPage() {
   const [lookingUp, setLookingUp] = useState(false)
   const [tracked, setTracked] = useState<TrackedItem[]>([])
   const [category, setCategory] = useState<string>()
+  const [contacts, setContacts] = useState<LineContact[]>([])
   const watched = Form.useWatch([], form)
 
   const load = useCallback(async () => {
@@ -107,6 +112,10 @@ export default function AlertsPage() {
   // 下拉選單只是方便挑，沒追蹤的物品照樣可以直接打英文名稱
   useEffect(() => {
     api.tracked().then(setTracked, (e) => message.error((e as Error).message))
+  }, [message])
+
+  useEffect(() => {
+    api.contacts().then(setContacts, (e) => message.error((e as Error).message))
   }, [message])
 
   // 屬性清單還沒載入時（例如剛按編輯），先用通知裡存的條件撐著
@@ -267,9 +276,15 @@ export default function AlertsPage() {
         <Form.Item
           name="recipients"
           label="收件人"
-          extra="可多個，輸入後按 Enter：LINE ID（U／C／R 開頭）、tg:<chat id>、Discord Webhook URL。留空推給預設的 LINE 收件人"
+          extra="可多個：從清單挑跟 bot 互動過的 LINE 好友／群組，或輸入後按 Enter：LINE ID（U／C／R 開頭）、tg:<chat id>、Discord Webhook URL。留空推給預設的 LINE 收件人"
         >
-          <Select mode="tags" open={false} tokenSeparators={[' ', ',']} placeholder="預設 LINE 收件人" />
+          <Select
+            mode="tags"
+            tokenSeparators={[' ', ',']}
+            placeholder="預設 LINE 收件人"
+            optionFilterProp="label"
+            options={contacts.map((c) => ({ value: c.id, label: `${c.name ?? '（無名稱）'}　${c.type === 'user' ? '好友' : '群組'}` }))}
+          />
         </Form.Item>
         {lookup && (
           <Typography.Paragraph type="secondary" style={{ marginTop: -8 }}>
@@ -385,7 +400,7 @@ export default function AlertsPage() {
           { title: '模式', key: 'combo', width: 110, render: (_, r) => comboLabel(r) },
           { title: '目標價 ≤', dataIndex: 'max_value', width: 100 },
           { title: '屬性條件', key: 'conditions', render: (_, r) => r.conditions.map(describe).join('；') },
-          { title: '收件人', key: 'recipients', render: (_, r) => (r.recipients.length ? r.recipients.map(recipientText).join('、') : '預設') },
+          { title: '收件人', key: 'recipients', render: (_, r) => (r.recipients.length ? r.recipients.map((to) => recipientText(to, contacts)).join('、') : '預設') },
           {
             title: '操作',
             key: '_actions',

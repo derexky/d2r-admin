@@ -5,6 +5,7 @@ import TablePage from './TablePage'
 import TrackedPage from './TrackedPage'
 import AlertsPage from './AlertsPage'
 import ValuesPage from './ValuesPage'
+import ContactsPage from './ContactsPage'
 
 const TABLE_LABELS: Record<string, string> = {
   items: '暗金裝備',
@@ -35,6 +36,7 @@ const TABLE_LABELS: Record<string, string> = {
 const TRACKED_KEY = '__tracked'
 const ALERTS_KEY = '__alerts'
 const VALUES_KEY = '__values'
+const CONTACTS_KEY = '__contacts'
 
 export default function App() {
   const [tables, setTables] = useState<TableMeta[]>([])
@@ -106,6 +108,7 @@ export default function App() {
                     { key: TRACKED_KEY, label: 'TR 價格追蹤物品' },
                     { key: ALERTS_KEY, label: 'TR 低價通知' },
                     { key: VALUES_KEY, label: 'TR 物品價值' },
+                    { key: CONTACTS_KEY, label: 'LINE 好友／群組' },
                   ]
                 : []),
             ]}
@@ -120,6 +123,7 @@ export default function App() {
           {current === TRACKED_KEY && <TrackedPage />}
           {current === ALERTS_KEY && <AlertsPage />}
           {current === VALUES_KEY && <ValuesPage />}
+          {current === CONTACTS_KEY && <ContactsPage />}
           {meta && <TablePage key={meta.table} meta={meta} title={TABLE_LABELS[meta.table]} />}
         </Layout.Content>
       </Layout>

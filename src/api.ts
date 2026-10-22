@@ -98,6 +98,14 @@ export interface PriceValue {
   value: number
 }
 
+// 跟 d2r-linebot 互動過的 LINE 好友／群組，由 bot 自動記錄
+export interface LineContact {
+  id: string
+  type: 'user' | 'group' | 'room'
+  name: string | null
+  seen_at: string
+}
+
 const enc = encodeURIComponent
 
 export const api = {
@@ -119,6 +127,7 @@ export const api = {
   removeAlert: (id: number) => request<{ id: number }>('DELETE', `/alerts/${id}`),
   alertProps: (item: string) => request<PropsLookup>('GET', `/alerts/props?${new URLSearchParams({ item })}`),
   checkAlerts: () => request<{ message: string }>('POST', '/alerts/check'),
+  contacts: () => request<LineContact[]>('GET', '/contacts'),
   values: () => request<PriceValue[]>('GET', '/values'),
   setValue: (v: PriceValue) => request<PriceValue>('PUT', `/values/${enc(v.combo)}/${enc(v.name)}`, { value: v.value }),
   removeValue: (combo: string, name: string) =>
