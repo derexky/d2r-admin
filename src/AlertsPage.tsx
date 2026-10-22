@@ -22,6 +22,8 @@ interface FormValues {
 type Def = Pick<PropDef, 'id' | 'name' | 'type'> & Partial<PropDef>
 
 const COMBOS = ['ladder_sc', 'nonladder_sc', 'ladder_hc', 'nonladder_hc']
+// 只用來設通知、不追蹤價格的物品（價格看詞綴，追蹤成交價沒意義），跟追蹤物品一起列在下拉選單
+const ALERT_ONLY_ITEMS: TrackedItem[] = [{ name: 'Grand Charm', zh: '大型咒符', category: '咒符' }]
 const comboLabel = (a: Pick<PriceAlert, 'ladder' | 'mode'>) => `${a.ladder ? 'Ladder' : 'NL'} ${a.mode.toUpperCase()}`
 const parseCombo = (c: string) => {
   const [ladder, mode] = c.split('_')
@@ -208,8 +210,9 @@ export default function AlertsPage() {
     }
   }
 
-  const categories = [...new Set(tracked.map((t) => t.category))]
-  const itemOptions = tracked
+  const pickable = [...tracked, ...ALERT_ONLY_ITEMS]
+  const categories = [...new Set(pickable.map((t) => t.category))]
+  const itemOptions = pickable
     .filter((t) => !category || t.category === category)
     .map((t) => ({ value: t.name, label: `${t.zh}（${t.name}）` }))
   const propOptions = (lookup?.props ?? []).map((p) => ({ value: p.id, label: `${p.name}（${statText(p)}）` }))
