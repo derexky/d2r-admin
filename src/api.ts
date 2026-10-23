@@ -41,7 +41,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   })
   const data = await res.json().catch(() => null)
   if (!res.ok) {
-    if (res.status === 401) throw new Error('Admin Token 錯誤或未設定')
+    if (res.status === 401) throw new Error(import.meta.env.DEV ? 'Admin Token 錯誤或未設定' : '登入已過期，請重新整理頁面')
     throw new Error(data?.message ?? `HTTP ${res.status}`)
   }
   return data as T

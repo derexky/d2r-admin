@@ -71,26 +71,29 @@ export default function App() {
         <Typography.Title level={4} style={{ color: '#fff', margin: 0, whiteSpace: 'nowrap' }}>
           D2R 後台
         </Typography.Title>
-        <Space.Compact style={{ marginLeft: 'auto', maxWidth: 360 }}>
-          <Input.Password
-            placeholder="Admin Token"
-            value={token}
-            onChange={(e) => setTokenInput(e.target.value)}
-            onPressEnter={() => {
-              setToken(token)
-              load()
-            }}
-          />
-          <Button
-            type="primary"
-            onClick={() => {
-              setToken(token)
-              load()
-            }}
-          >
-            套用
-          </Button>
-        </Space.Compact>
+        {/* 線上版由 Cloudflare Access 登入、d2r-service 驗它的 JWT；只有本機開發要輸入 ADMIN_TOKEN */}
+        {import.meta.env.DEV && (
+          <Space.Compact style={{ marginLeft: 'auto', maxWidth: 360 }}>
+            <Input.Password
+              placeholder="Admin Token"
+              value={token}
+              onChange={(e) => setTokenInput(e.target.value)}
+              onPressEnter={() => {
+                setToken(token)
+                load()
+              }}
+            />
+            <Button
+              type="primary"
+              onClick={() => {
+                setToken(token)
+                load()
+              }}
+            >
+              套用
+            </Button>
+          </Space.Compact>
+        )}
       </Layout.Header>
       <Layout>
         <Layout.Sider width={260} theme="light" breakpoint="lg" collapsedWidth={0}>

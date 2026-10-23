@@ -2,7 +2,7 @@
 
 d2r-service 的資料後台，可新增、修改、刪除 `d2r.sqlite` 所有資料表。
 
-線上版在 myhost：`https://d2r-admin.derexky.com`（Cloudflare Access 只允許指定 email 登入，進去後右上角再輸入 `ADMIN_TOKEN`）。架構、部署與 DB 流程見下方「myhost」。下面的本機啟動方式仍可用於開發。
+線上版在 myhost：`https://d2r-admin.derexky.com`（Cloudflare Access 只允許指定 email 登入；d2r-service 驗證 Access 附上的 JWT，不用輸入 `ADMIN_TOKEN`）。架構、部署與 DB 流程見下方「myhost」。下面的本機啟動方式仍可用於開發。
 
 ## 啟動
 
@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-開啟後在右上角輸入同一組 `ADMIN_TOKEN`。
+開啟後在右上角輸入同一組 `ADMIN_TOKEN`（輸入框只在本機開發出現）。
 
 ## 上線流程
 
